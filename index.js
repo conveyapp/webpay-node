@@ -194,8 +194,9 @@ app.post("/inscribe", async (req, res) => {
 });
 
 // 🔁 Webpay vuelve acá después de inscripción
-app.post("/finish_inscription", async (req, res) => {
-  const token = req.body.TBK_TOKEN;
+app.all("/finish_inscription", async (req, res) => {
+  const token = (req.body && (req.body.TBK_TOKEN || req.body.token_ws || req.body.token))
+    || (req.query && (req.query.TBK_TOKEN || req.query.token_ws || req.query.token));
   if (!token) return res.send("Falta token de inscripción");
 
   try {

@@ -23,6 +23,9 @@ const tx = Oneclick.MallTransaction.buildForIntegration(
   IntegrationApiKeys.WEBPAY
 );
 
+// Mapa en memoria para asociar TBK_TOKEN a { email, username }
+const pendingInscriptions = new Map();
+
 // 🌐 Home: muestra formulario de inscripción
 app.get("/", (req, res) => {
   const { username = "", email = "" } = req.query || {};
@@ -161,11 +164,18 @@ app.get("/", (req, res) => {
 // 🚀 Inicia inscripción
 app.post("/inscribe", async (req, res) => {
   const { username, email } = req.body;
-  const responseUrl = "http://localhost:3000/finish_inscription";
+  const responseUrl = "https://webpay-node.onrender.com/finish_inscription";
 
   try {
     const start = await ins.start(username, email, responseUrl);
     console.log("✅ Inicio inscripción:", start);
+
+    // Guardar asociación token -> datos del usuario para recuperar el email en finish
+    try {
+      if (start && start.token) {
+        pendingInscriptions.set(start.token, { email, username, createdAt: Date.now() });
+      }
+    } catch (_) { }
 
     // Redirige a Webpay (inscripción)
     res.send(`
@@ -191,6 +201,33 @@ app.post("/finish_inscription", async (req, res) => {
   try {
     const result = await ins.finish(token);
     console.log("✅ Resultado inscripción:", result);
+
+    // Intentar persistir en backend PHP (sin token de seguridad, como solicitado)
+    try {
+      const pending = pendingInscriptions.get(token) || {};
+      const emailFromMap = pending.email || '';
+      const usernameFromMap = pending.username || result.username || '';
+      // Limpieza básica: eliminar del mapa para no crecer memoria
+      pendingInscriptions.delete(token);
+
+      const fetchRes = await fetch("https://convey.cl/cliente/oneclick/OneclickGuardarInscripcion.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: emailFromMap,
+          username: usernameFromMap,
+          tbk_user: result.tbk_user || '',
+          status: 'SUCCESS',
+          environment: 'integration',
+          card_brand: null,
+          card_last4: null
+        })
+      });
+      const saveJson = await fetchRes.text();
+      console.log('📦 Respuesta guardado PHP:', saveJson);
+    } catch (e) {
+      console.error('❌ Error enviando a PHP:', e.message);
+    }
 
     res.send(`
       <html><body style="font-family:sans-serif;text-align:center;margin-top:50px;">

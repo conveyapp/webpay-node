@@ -121,18 +121,17 @@ app.get("/", (req, res) => {
         <div class="content">
           ${hasParams ? `
           <div>
-            <p class="sub" style="margin-bottom:12px;color:#444;">Estamos preparando tu inscripción con Transbank.</p>
-            <p class="sub" style="margin:0 0 16px 0;color:#666;">No cierres esta ventana. Te redirigiremos automáticamente para continuar.</p>
-            <div style="display:flex;align-items:center;gap:8px;color:#666;font-size:13px;">
-              <div style="width:14px;height:14px;border:2px solid #CFEED9;border-top-color:#07E607;border-radius:50%;animation:spin 1s linear infinite;"></div>
-              <span>Conectando con Webpay Oneclick…</span>
+            <p class="sub" style="margin-bottom:12px;color:#444;">Vamos a iniciar tu inscripción con Transbank.</p>
+            <p class="sub" style="margin:0 0 16px 0;color:#666;">Cuando estés listo, presiona “Seguir” para continuar.</p>
+            <div class="actions">
+              <button class="btn btn-primary" type="button" onclick="document.getElementById('f').submit()">Seguir</button>
+              <span class="hint">Ambiente de integración • <span class="badge">Transbank</span></span>
             </div>
           </div>
           <form id="f" action="/inscribe" method="POST" style="display:none;">
             <input id="username" name="username" value="${String(username || "").replace(/"/g, '&quot;')}" />
             <input id="email" name="email" type="email" value="${String(email || "").replace(/"/g, '&quot;')}" />
           </form>
-          <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
           ` : `
           <form id="f" action="/inscribe" method="POST">
             <div class="field">
@@ -152,17 +151,7 @@ app.get("/", (req, res) => {
         </div>
       </div>
       <script>
-        (function(){
-          var hasParams = ${hasParams ? 'true' : 'false'};
-          if (hasParams) {
-            var f = document.getElementById('f');
-            var u = document.getElementById('username');
-            var e = document.getElementById('email');
-            if (f && u && e && u.value && e.value) {
-              f.submit();
-            }
-          }
-        })();
+        // En este modo, no hay autoenvío; el usuario presiona “Seguir”.
       </script>
     </body>
   </html>

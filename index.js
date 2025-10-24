@@ -275,7 +275,7 @@ app.all("/finish_inscription", async (req, res) => {
                 <div class="kv"><b>tbk_user:</b> ${result.tbk_user || '—'}</div>
                 <div class="kv"><b>Tarjeta:</b> ${(cardType || '—')} •••• ${(cardLast4 || '—')}</div>
                 <div class="actions">
-                  <a href="/" class="btn btn-primary" style="text-decoration:none;display:inline-block;">Volver al inicio</a>
+                  <a href="conveyon://oneclick?status=ok" class="btn btn-primary" style="text-decoration:none;display:inline-block;">Volver a la app</a>
                   <span class="hint">Ambiente de integración • <span class="badge">Transbank</span></span>
                 </div>
               </div>

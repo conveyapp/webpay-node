@@ -334,6 +334,44 @@ app.post("/charge", async (req, res) => {
   }
 });
 
+// 💳 Cobrar (JSON API)
+app.post("/api/charge", async (req, res) => {
+  const { username, tbk_user, amount } = req.body || {};
+  const buyOrder = "order-" + Date.now();
+
+  if (!username || !tbk_user || !amount) {
+    return res.status(400).json({ success: false, message: "username, tbk_user y amount son requeridos" });
+  }
+
+  try {
+    const result = await tx.authorize(username, tbk_user, buyOrder, [
+      {
+        commerce_code: IntegrationCommerceCodes.ONECLICK_MALL_CHILD1,
+        buy_order: "child-" + Date.now(),
+        amount: Number(amount),
+        installments_number: 1,
+      },
+    ]);
+
+    const detail = (result && result.details && result.details[0]) || {};
+    return res.json({
+      success: true,
+      data: {
+        username,
+        tbk_user,
+        amount: Number(amount),
+        buy_order: detail.buy_order || null,
+        status: detail.status || null,
+        authorization_code: detail.authorization_code || null,
+        commerce_code: detail.commerce_code || null,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Error cobrando (api):", err);
+    return res.status(500).json({ success: false, message: err.message || "Error realizando cobro" });
+  }
+});
+
 // 🔙 Reversa de cobro (opcional)
 app.post("/reverse", async (req, res) => {
   const { buy_order, commerce_code, authorization_code } = req.body;
